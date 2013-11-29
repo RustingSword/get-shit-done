@@ -14,9 +14,9 @@ including `/etc/hosts`, so you don't need to manually flush DNS cache after
 updating the hosts file.
 2. I split the python version into two seperate files just to save some keystrokes...
 3. The format of config file (see the example `sites.conf`):
-* One site per line, because this is more readable, and easy to add new sites in
+    * One site per line, because this is more readable, and easy to add new sites in
 the middle, which helps keeping the config file organized.
-* Allow comments starting with '#'.
+    * Allow comments starting with '#'.
 
 Some simple sanity checks are also added.
 
