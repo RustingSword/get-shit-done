@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+
+import sys
+import getpass
+from os import path
+
+def exit_error(error):
+    print(error, file=sys.stderr)
+    exit(1)
+
+hosts_file  = '/etc/hosts'
+
+# since this script must be run as root, we simply hardcode the ini_local to
+# the home directory of current user.
+ini_local   = '/home/USERNAME/.config/sites.conf'
+ini_global  = '/etc/sites.conf'
+
+start_token = '## start-gsd'
+end_token   = '## end-gsd'
+
+def ini_to_array(ini_file):
+    # One site per line, because this is more readable, and easy to add new
+    # sites in the middle, which helps keeping the config file organized.
+    # Allow comments starting with '#'.
+    sites = []
+    if path.exists(ini_file):
+        with open(ini_file) as f:
+            for line in f:
+                line = line.strip()
+                # omit blank/comment line
+                if len(line) == 0 or line[0] == '#': continue
+
+                site = line.split('#')[0].strip()
+
+                # simple sanity check
+                # url like a.bc is at least 4 characters long, and the rightmost
+                # '.' should be somewhere in site[1:-2]
+                if len(site) >= 4 and 0 < site.rfind('.') < len(site)-2:
+                    sites.append(site)
+                else:
+                    print(site, 'is not a valid url.', file=sys.stderr)
+    else:
+        print('WARNING:', ini_file, 'does not exist.', file=sys.stderr)
+    return sites
+
+def work():
+    # FIXME if opened in other mode, 'contents' will be empty, so add redundant
+    # check here.
+    testFile = open(hosts_file, 'r')
+    contents = testFile.read()
+    if start_token in contents and end_token in contents:
+        testFile.close()
+        exit_error("Work mode already set.")
+
+    hFile = open(hosts_file, 'a+')
+
+    site_list = ini_to_array(ini_global) + ini_to_array(ini_local)
+    if len(site_list) > 0:
+        print(start_token, file=hFile)
+        # remove duplicates by converting list to a set
+        for site in set(site_list):
+            print("127.0.0.1\t" + site, file=hFile)
+            print("127.0.0.1\twww." + site, file=hFile)
+
+        print(end_token, file=hFile)
+    else:
+        print('No sites given, aborted.', file=sys.stderr)
+    hFile.close()
+
+def main():
+    if getpass.getuser() != 'root':
+        exit_error('Please run script as root.')
+    work()
+
+if __name__ == "__main__":
+    main()
