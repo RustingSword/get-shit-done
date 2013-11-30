@@ -17,13 +17,16 @@ def play():
     lines = hosts_file_handle.readlines()
 
     startIndex = -1
+    endIndex   = -1
 
     for index, line in enumerate(lines):
         if line.strip() == start_token:
             startIndex = index
+        if line.strip() == end_token:
+            endIndex   = index
 
     if startIndex > -1:
-        lines = lines[0:startIndex]
+        lines = lines[0:startIndex] + lines[endIndex+1:]
 
         hosts_file_handle.seek(0)
         hosts_file_handle.write(''.join(lines))
